@@ -5,6 +5,7 @@ var Game = function(game) {
   this.stars;
   // this.score = 0;
   // this.scoreText;
+  this.width = 2000;
 };
 
 Game.prototype = {
@@ -45,14 +46,14 @@ Game.prototype = {
     graphics.beginFill(0x000019);
     graphics.lineStyle(2, 0x000019, 1);
     // syntax: top left x, top left y, width, height
-    graphics.drawRect(0, game.height/2, game.width, game.height);
+    graphics.drawRect(0, game.height/2, this.width, game.height);
     graphics.endFill();
 
     // add star player and enable physics on player
-    this.player = game.add.sprite(game.width/2, game.height/4 * 3, 'dude');
+    this.player = game.add.sprite(this.width/2, game.height/4 * 4, 'dude');
     this.player.scale.setTo(1.5, 1.5);
-    this.player.anchor.setTo(.5, 1);
-    console.log("this.player.anchor", this.player.anchor)
+    this.player.anchor.setTo(0.5, 1);
+    console.log("this.player.anchor", this.player.anchor);
 
     game.physics.arcade.enable(this.player);
     // scale player so that eye level is at the horizon line
@@ -69,9 +70,9 @@ Game.prototype = {
     game.addStar = function(){
         game.starCount++;
         console.log("addStar starCount", game.starCount);
-        var star = game.stars.create(game.width/2, game.height/2, 'star');
+        var star = game.stars.create(this.width/2, game.height/2, 'star');
         star.scale.setTo(0);
-        star.anchor.setTo(.5);
+        star.anchor.setTo(0.5);
         // enable physics
         // game.physics.enable(star, Phaser.Physics.ARCADE);
         star.body.immovable = true;
@@ -85,7 +86,7 @@ Game.prototype = {
 
         var tween2 = game.add.tween(star.position);
         // stars move to random x coordinates of screen
-        tween2.to({x: game.width * 3 - Math.random()*game.width*6, y: game.height*1.5}, timeToTween, Phaser.Easing.Exponential.In, true)
+        tween2.to({x: this.width * 3 - Math.random()*this.width*6, y: this.height*1.5}, timeToTween, Phaser.Easing.Exponential.In, true)
         tween2.onComplete.add(function() {
             game.starCount--;
             star.kill();
@@ -152,8 +153,8 @@ Game.prototype = {
     // this.player.body.collideWorldBounds = true;
 
     // //  Our two animations, walking left and right.
-    // this.player.animations.add('left', [0, 1, 2, 3], 10, true);
-    // this.player.animations.add('right', [5, 6, 7, 8], 10, true);
+    this.player.animations.add('left', [0, 1, 2, 3], 10, true);
+    this.player.animations.add('right', [5, 6, 7, 8], 10, true);
 
     // //  Finally some stars to collect
     // this.stars = game.add.group();
@@ -178,36 +179,40 @@ Game.prototype = {
     // this.scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
     // //  Our controls.
-    // cursors = game.input.keyboard.createCursorKeys();
+    cursors = game.input.keyboard.createCursorKeys();
+    //set the world to be wider behind the frame
+    game.world.setBounds(0,0,this.width,game.height);
+    game.camera.follow(this.player, Phaser.Camera.FOLLOW_LOCKON);
+    this.player.body.collideWorldBounds=true;
+
   },
 
   update: function() {
     //  Collide the player and the stars with the platforms
-    game.physics.arcade.collide(game.player, game.stars);
+    game.physics.arcade.collide(this.player, game.stars,this.gameOver, null, this);
     // game.physics.arcade.collide(this.stars, platforms);
 
     // //  Checks to see if the player overlaps with any of the stars, if he does call the gameOver function
-    game.physics.arcade.overlap(this.player, game.stars, this.gameOver, null, this);
-
+    // game.physics.arcade.overlap(this.player, game.stars, this.gameOver, null, this);
 
     // //  Reset the players velocity (movement)
-    // this.player.body.velocity.x = 0;
+    this.player.body.velocity.x = 0;
 
-    // if (cursors.left.isDown) {
-    //     //  Move to the left
-    //     this.player.body.velocity.x = -150;
-    //     this.player.animations.play('left');
-    // }
-    // else if (cursors.right.isDown) {
-    //     //  Move to the right
-    //     this.player.body.velocity.x = 150;
-    //     this.player.animations.play('right');
-    // }
-    // else {
-    //     //  Stand still
-    //     this.player.animations.stop();
-    //     this.player.frame = 4;
-    // }
+    if (cursors.left.isDown) {
+        //  Move to the left
+        this.player.body.velocity.x = -150;
+        this.player.animations.play('left');
+    }
+    else if (cursors.right.isDown) {
+        //  Move to the right
+        this.player.body.velocity.x = 150;
+        this.player.animations.play('right');
+    }
+    else {
+        //  Stand still
+        this.player.animations.stop();
+        this.player.frame = 4;
+    }
 
     // //  Allow the player to jump if they are touching the ground.
     // if (cursors.up.isDown && this.player.body.touching.down) {
